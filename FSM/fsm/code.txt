@@ -1,0 +1,164 @@
+// -------------- 101 detector using moore fsm -----------------------
+
+module moore_fsm(
+    input clk, rst, x,
+    output reg out
+);
+
+reg [1:0] state;
+reg [1:0] nxt_state;
+
+parameter s0 = 2'b00;
+parameter s1 = 2'b01;
+parameter s2 = 2'b10;
+parameter s3 = 2'b11;
+
+// state register ----------------------------------------------
+
+always @(posedge clk or posedge rst) begin
+    if (rst)
+        state <= s0;
+    else
+        state <= nxt_state;
+end
+
+always @(*) begin
+
+    case (state)
+    
+    s0: begin
+        if (x)
+            nxt_state = s1;
+        else
+            nxt_state = s0;
+    end
+    
+    s1: begin
+        if (x)
+            nxt_state = s0;
+        else
+            nxt_state = s2;    
+    end
+    
+    s2: begin
+        if (x)
+            nxt_state = s3;
+        else
+            nxt_state = s0;    
+    end
+    
+    s3: begin
+        if (x)
+            nxt_state = s1;
+        else
+            nxt_state = s2;    
+    end
+    
+    // default value ---------------------------------------
+    default:
+    nxt_state = s0;
+    
+     endcase
+end
+   
+    // output --------------------------------------------------------
+    
+    always @(*) begin
+    
+        if (state == s3)
+            out = 1'b1;
+        else
+            out = 1'b0;
+    
+ end
+    
+endmodule
+
+
+
+
+
+
+
+//101 sequence detector using mealy fsm ------------------------------
+
+module mealy_fsm(
+    input clk, rst, x,
+    output reg out
+);
+
+reg [1:0] state;
+reg [1:0] nxt_state;
+
+parameter s0 = 2'b00;
+parameter s1 = 2'b01;
+parameter s2 = 2'b10;
+
+// state register ----------------------------------------------
+
+always @(posedge clk or posedge rst) begin
+
+    if (rst)
+        state <= s0;
+    else
+        state <= nxt_state;
+end
+
+// ---------- next state and output logic -------------------------
+
+always @(*) begin
+
+    // default value ---------------------------
+    nxt_state = s0;
+    out = 1'b0;
+
+    case (state)
+    
+        s0: begin
+            if (x) begin
+                nxt_state = s1;
+                out = 1'b0;
+            end    
+            else begin
+                nxt_state = s0;
+                out = 1'b0;
+            end    
+        end
+        
+        s1: begin
+            if (x) begin
+                nxt_state = s1;
+                out = 1'b0;
+            end    
+            else begin
+                nxt_state = s2;
+                out = 1'b0;
+            end    
+        end
+        
+        s2: begin
+            if (x) begin
+                nxt_state = s1;
+                out = 1'b1;
+            end    
+            else begin
+                nxt_state = s0;
+                out = 1'b0;
+            end    
+        end
+        
+        // default value ---------------------------------------
+        default: begin
+        nxt_state = s0;
+        out = 1'b0;
+        end
+        
+     endcase
+     
+end
+   
+// here there is no output block like moore because output is updated side by side as input changes --------------------------------------------------------
+    
+    
+endmodule
+

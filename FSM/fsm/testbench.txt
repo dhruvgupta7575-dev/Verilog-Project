@@ -1,0 +1,137 @@
+`timescale 1ns / 1ps
+
+module traffic_light_tb;
+
+reg clk, rst, timer_done;
+wire red, green, yellow;
+
+traffic_light x(
+    .clk(clk),
+    .rst(rst),
+    .time_done(timer_done),
+    .red(red),
+    .green(green),
+    .yellow(yellow)
+);
+
+
+
+initial begin
+    clk = 0;
+    forever #5 clk = ~clk;
+end
+
+
+initial begin
+
+    $monitor("Time = %0t | Rst = %b | Timer_done = %b | Red = %b | Yellow = %b | Green = %b",
+             $time, rst, timer_done, red, yellow, green);
+
+end
+
+
+
+initial begin
+
+    rst = 1'b1;
+    timer_done = 1'b0;
+
+    #12;
+
+    rst = 1'b0;
+
+
+    // RED should remain active
+    @(posedge clk);
+    #1;
+
+    if (red == 1'b1 && yellow == 1'b0 && green == 1'b0)
+        $display("PASS: RED state");
+    else
+        $error("FAIL: RED state");
+
+
+    // RED -> GREEN
+    timer_done = 1'b1;
+
+    @(posedge clk);
+    #1;
+
+    timer_done = 1'b0;
+
+    if (red == 1'b0 && yellow == 1'b0 && green == 1'b1)
+        $display("PASS: RED -> GREEN");
+    else
+        $error("FAIL: RED -> GREEN");
+
+
+    // GREEN should hold
+    @(posedge clk);
+    #1;
+
+    if (red == 1'b0 && yellow == 1'b0 && green == 1'b1)
+        $display("PASS: GREEN hold");
+    else
+        $error("FAIL: GREEN hold");
+
+
+    // GREEN -> YELLOW
+    timer_done = 1'b1;
+
+    @(posedge clk);
+    #1;
+
+    timer_done = 1'b0;
+
+    if (red == 1'b0 && yellow == 1'b1 && green == 1'b0)
+        $display("PASS: GREEN -> YELLOW");
+    else
+        $error("FAIL: GREEN -> YELLOW");
+
+
+    // YELLOW should hold
+    @(posedge clk);
+    #1;
+
+    if (red == 1'b0 && yellow == 1'b1 && green == 1'b0)
+        $display("PASS: YELLOW hold");
+    else
+        $error("FAIL: YELLOW hold");
+
+
+    // YELLOW -> RED
+    timer_done = 1'b1;
+
+    @(posedge clk);
+    #1;
+
+    timer_done = 1'b0;
+
+    if (red == 1'b1 && yellow == 1'b0 && green == 1'b0)
+        $display("PASS: YELLOW -> RED");
+    else
+        $error("FAIL: YELLOW -> RED");
+
+
+    // RESET
+    rst = 1'b1;
+
+    #2;
+
+    if (red == 1'b1 && yellow == 1'b0 && green == 1'b0)
+        $display("PASS: RESET");
+    else
+        $error("FAIL: RESET");
+
+    rst = 1'b0;
+
+
+    #10;
+
+    $display("Traffic Light FSM Test Complete");
+
+    $finish;
+
+end
+
+endmodule
