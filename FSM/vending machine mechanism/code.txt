@@ -1,0 +1,114 @@
+`timescale 1ns / 1ps
+
+module vending_machine(
+    input clk, rst, c5, c10,
+    output reg change5,
+    output reg out
+    );
+
+parameter s0 = 2'b00;
+parameter s5 = 2'b01;
+parameter s10 = 2'b10;
+
+reg [1:0] state;
+reg [1:0] nxt_state;
+
+
+// 1. -------------------------- state logic on clk pulse --------------------------------------
+
+
+always @(posedge clk or posedge rst) begin
+
+    if (rst) begin
+        nxt_state <= s0;
+    end
+    else begin
+        state <= nxt_state;
+    end
+    
+end
+
+
+// 2. ------------------------- next state logic -------------------------------------------
+
+
+always @(*) begin
+
+    nxt_state = state;
+    
+    case (state) 
+        
+        s0: begin
+            if (c5 && !c10) begin
+                nxt_state = s5;
+            end
+            else if (!c5 && c10) begin
+                nxt_state = s10;
+            end
+        end
+        
+        s5: begin
+            if (c5 && !c10) begin
+                nxt_state = s10;
+            end
+            else if (!c5 && c10) begin
+                nxt_state = s0;
+            end
+        end
+        
+        s10: begin
+            if ((c5 && !c10) || (!c5 && c10)) begin
+                nxt_state = s0;
+            end
+        end
+        
+        default: begin
+            nxt_state = s0;
+        end
+    
+    endcase
+
+end
+
+
+// ------------------- Output + change5 -------------------------------------------------
+
+
+always @(posedge clk or posedge rst) begin
+
+    if (rst) begin
+        out <= 1'b0;
+        change5 <= 1'b0;
+    end
+    
+    else begin 
+    
+        out <= 1'b0;
+        change5 <= 1'b0;
+        
+        case (state)
+            
+            s5: begin
+                if (c10 && !c5) begin
+                    out <= 1'b1;
+                end
+            end
+            
+            s10: begin
+                if (c5 && !c10) begin
+                    out <= 1'b0;
+                end
+                else if (c10 && !c5) begin
+                    out <= 1'b1;
+                    change5 <= 1'b1;
+                end
+            end
+        
+    
+    endcase
+    
+    end
+
+end
+
+endmodule
